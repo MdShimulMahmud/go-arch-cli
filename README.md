@@ -99,8 +99,8 @@ All release binaries are secured with multiple verification mechanisms:
 ### Quick Verification
 ```bash
 # Download and verify (example for Linux)
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/go-arch-cli-v1.0.1/go-arch-cli-linux-amd64
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/go-arch-cli-v1.0.1/SHA256SUMS
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.1/go-arch-cli-linux-amd64
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.1/SHA256SUMS
 
 # Verify checksum
 sha256sum -c SHA256SUMS

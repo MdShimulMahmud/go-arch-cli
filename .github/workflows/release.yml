@@ -9,7 +9,6 @@ on:
     push:
         tags:
             - "v*"
-            - "go-arch-cli-v*"
     pull_request:
         branches: [master]
         paths-ignore:
