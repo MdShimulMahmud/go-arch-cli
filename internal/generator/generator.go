@@ -188,13 +188,13 @@ func writeFiles(dir string, files []string) error {
 func runGoModInit(dir, module string) error {
 	cmd := exec.Command("go", "mod", "init", module)
 	cmd.Dir = dir
-	
+
 	// Capture both stdout and stderr for better debugging
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("go mod init failed in %s with module %s: %w\nOutput: %s", dir, module, err, string(output))
 	}
-	
+
 	return nil
 }
 
