@@ -469,15 +469,15 @@ func generateModular(module string) error {
 
 func generateMonorepo(module string) error {
 	dir := "project_monorepo"
-	
+
 	// Create basic structure first
 	os.MkdirAll(dir, 0755)
-	
+
 	// Create root go.mod
 	if err := runGoModInit(dir, module); err != nil {
 		return fmt.Errorf("failed to initialize root go.mod: %w", err)
 	}
-	
+
 	// Create service directories
 	serviceDirs := []string{
 		"services/user-service/cmd",
@@ -489,44 +489,44 @@ func generateMonorepo(module string) error {
 		"libs/authentication",
 		"libs/utils",
 	}
-	
+
 	for _, serviceDir := range serviceDirs {
 		if err := os.MkdirAll(filepath.Join(dir, serviceDir), 0755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", serviceDir, err)
 		}
 	}
-	
+
 	// Write service-specific files with content
 	if err := writeMonorepoServiceFiles(dir); err != nil {
 		return fmt.Errorf("failed to write service files: %w", err)
 	}
-	
+
 	// Create service-specific go.mod
 	serviceDir := filepath.Join(dir, "services/user-service")
 	serviceModule := module + "/services/user-service"
 	if err := runGoModInit(serviceDir, serviceModule); err != nil {
 		return fmt.Errorf("failed to initialize service go.mod: %w", err)
 	}
-	
+
 	// Write main starter file
 	if err := writeMainStarter(filepath.Join(dir, "services/user-service/cmd/main.go"), "Monorepo User Service"); err != nil {
 		return fmt.Errorf("failed to write main file: %w", err)
 	}
-	
+
 	// Write library files
 	if err := writeLibraryFiles(dir); err != nil {
 		return fmt.Errorf("failed to write library files: %w", err)
 	}
-	
+
 	// Write common files
 	if err := writeREADME(dir, "Monorepo", module); err != nil {
 		return fmt.Errorf("failed to write README: %w", err)
 	}
-	
+
 	if err := writeGitignore(dir); err != nil {
 		return fmt.Errorf("failed to write .gitignore: %w", err)
 	}
-	
+
 	return nil
 }
 
