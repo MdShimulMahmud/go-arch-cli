@@ -37,16 +37,16 @@ A command-line tool to generate Go projects with different architectural pattern
 #### Linux/macOS
 ```bash
 # Download and run installation script
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash
 
 # Or with custom directory
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/main/install.sh | bash -s -- "$HOME/bin"
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "$HOME/bin"
 ```
 
 #### Windows
 ```powershell
 # Download and run installation script
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/main/install.bat -OutFile install.bat && .\install.bat
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.bat -OutFile install.bat && .\install.bat
 ```
 
 ### From Source
