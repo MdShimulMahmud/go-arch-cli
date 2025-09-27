@@ -1,5 +1,9 @@
 # Go Architecture CLI
 
+[![CI](https://github.com/MdShimulMahmud/go-arch-cli/workflows/CI/badge.svg)](https://github.com/MdShimulMahmud/go-arch-cli/actions)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/MdShimulMahmud/go-arch-cli)](https://golang.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A command-line tool to generate Go projects with different architectural patterns. This tool helps developers quickly scaffold Go projects with well-organized, industry-standard architectural structures.
 
 ## Features
@@ -187,7 +191,7 @@ Each generated project includes:
 
 ## Requirements
 
-- Go 1.19 or higher
+- Go 1.20 or higher
 - Terminal with interactive support (for interactive mode)
 
 ## Development
