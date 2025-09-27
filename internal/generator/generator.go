@@ -188,7 +188,14 @@ func writeFiles(dir string, files []string) error {
 func runGoModInit(dir, module string) error {
 	cmd := exec.Command("go", "mod", "init", module)
 	cmd.Dir = dir
-	return cmd.Run()
+	
+	// Capture both stdout and stderr for better debugging
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("go mod init failed in %s with module %s: %w\nOutput: %s", dir, module, err, string(output))
+	}
+	
+	return nil
 }
 
 func writeREADME(dir, arch, module string) error {
@@ -470,8 +477,15 @@ func generateModular(module string) error {
 func generateMonorepo(module string) error {
 	dir := "project_monorepo"
 
+	// Remove existing directory if it exists to avoid conflicts
+	if err := os.RemoveAll(dir); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove existing directory %s: %w", dir, err)
+	}
+
 	// Create basic structure first
-	os.MkdirAll(dir, 0755)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create project directory: %w", err)
+	}
 
 	// Create root go.mod
 	if err := runGoModInit(dir, module); err != nil {
@@ -491,8 +505,9 @@ func generateMonorepo(module string) error {
 	}
 
 	for _, serviceDir := range serviceDirs {
-		if err := os.MkdirAll(filepath.Join(dir, serviceDir), 0755); err != nil {
-			return fmt.Errorf("failed to create directory %s: %w", serviceDir, err)
+		fullPath := filepath.Join(dir, serviceDir)
+		if err := os.MkdirAll(fullPath, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", fullPath, err)
 		}
 	}
 
