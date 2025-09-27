@@ -213,6 +213,141 @@ func main() {
 	return os.WriteFile(path, []byte(content), 0644)
 }
 
+func writeLibraryFiles(dir string) error {
+	// Write logging library
+	loggerContent := `package logging
+
+import "log"
+
+// Logger provides structured logging
+type Logger struct{}
+
+// Info logs an info message
+func (l *Logger) Info(msg string) {
+	log.Println("[INFO]", msg)
+}
+
+// Error logs an error message
+func (l *Logger) Error(msg string) {
+	log.Println("[ERROR]", msg)
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "libs/logging/logger.go"), []byte(loggerContent), 0644); err != nil {
+		return err
+	}
+
+	// Write authentication library
+	authContent := `package authentication
+
+// Auth provides authentication utilities
+type Auth struct{}
+
+// Validate validates a token
+func (a *Auth) Validate(token string) bool {
+	// TODO: Implement token validation
+	return len(token) > 0
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "libs/authentication/auth.go"), []byte(authContent), 0644); err != nil {
+		return err
+	}
+
+	// Write utils library
+	utilsContent := `package utils
+
+// StringHelper provides string utilities
+func StringHelper() string {
+	return "Helper functions"
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "libs/utils/helpers.go"), []byte(utilsContent), 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writeMonorepoServiceFiles(dir string) error {
+	// User handler
+	handlerContent := `package handler
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+type UserHandler struct{}
+
+func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	user := map[string]string{"name": "John Doe", "email": "john@example.com"}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "services/user-service/internal/handler/user_handler.go"), []byte(handlerContent), 0644); err != nil {
+		return err
+	}
+
+	// User service
+	serviceContent := `package service
+
+type User struct {
+	ID    int    ` + "`json:\"id\"`" + `
+	Name  string ` + "`json:\"name\"`" + `
+	Email string ` + "`json:\"email\"`" + `
+}
+
+type UserService struct{}
+
+func (s *UserService) GetUser(id int) (*User, error) {
+	// TODO: Implement user retrieval logic
+	return &User{ID: id, Name: "John Doe", Email: "john@example.com"}, nil
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "services/user-service/internal/service/user_service.go"), []byte(serviceContent), 0644); err != nil {
+		return err
+	}
+
+	// User repository
+	repoContent := `package repository
+
+import "errors"
+
+type UserRepository struct{}
+
+func (r *UserRepository) FindByID(id int) (map[string]interface{}, error) {
+	if id <= 0 {
+		return nil, errors.New("invalid user ID")
+	}
+	// TODO: Implement database logic
+	return map[string]interface{}{
+		"id":    id,
+		"name":  "John Doe",
+		"email": "john@example.com",
+	}, nil
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "services/user-service/internal/repository/user_repository.go"), []byte(repoContent), 0644); err != nil {
+		return err
+	}
+
+	// User models
+	modelsContent := `package models
+
+type User struct {
+	ID       int    ` + "`json:\"id\" db:\"id\"`" + `
+	Name     string ` + "`json:\"name\" db:\"name\"`" + `
+	Email    string ` + "`json:\"email\" db:\"email\"`" + `
+	Password string ` + "`json:\"-\" db:\"password\"`" + `
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "services/user-service/internal/models/user.go"), []byte(modelsContent), 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // -------------------- Architectures --------------------
 
 func generateFlat(module string) error {
@@ -334,26 +469,65 @@ func generateModular(module string) error {
 
 func generateMonorepo(module string) error {
 	dir := "project_monorepo"
-	files := []string{
-		"services/user-service/cmd/main.go",
-		"services/user-service/internal/handler/",
-		"services/user-service/internal/service/",
-		"services/user-service/internal/repository/",
-		"services/user-service/internal/models/",
-		"services/user-service/go.mod",
-		"services/user-service/go.sum",
-		"libs/logging/",
-		"libs/authentication/",
-		"libs/utils/",
-		"go.mod",
-		"go.sum",
-	}
+	
+	// Create basic structure first
 	os.MkdirAll(dir, 0755)
-	writeFiles(dir, files)
-	writeMainStarter(filepath.Join(dir, "services/user-service/cmd/main.go"), "Monorepo")
-	writeREADME(dir, "Monorepo", module)
-	writeGitignore(dir)
-	return runGoModInit(dir, module)
+	
+	// Create root go.mod
+	if err := runGoModInit(dir, module); err != nil {
+		return fmt.Errorf("failed to initialize root go.mod: %w", err)
+	}
+	
+	// Create service directories
+	serviceDirs := []string{
+		"services/user-service/cmd",
+		"services/user-service/internal/handler",
+		"services/user-service/internal/service",
+		"services/user-service/internal/repository",
+		"services/user-service/internal/models",
+		"libs/logging",
+		"libs/authentication",
+		"libs/utils",
+	}
+	
+	for _, serviceDir := range serviceDirs {
+		if err := os.MkdirAll(filepath.Join(dir, serviceDir), 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", serviceDir, err)
+		}
+	}
+	
+	// Write service-specific files with content
+	if err := writeMonorepoServiceFiles(dir); err != nil {
+		return fmt.Errorf("failed to write service files: %w", err)
+	}
+	
+	// Create service-specific go.mod
+	serviceDir := filepath.Join(dir, "services/user-service")
+	serviceModule := module + "/services/user-service"
+	if err := runGoModInit(serviceDir, serviceModule); err != nil {
+		return fmt.Errorf("failed to initialize service go.mod: %w", err)
+	}
+	
+	// Write main starter file
+	if err := writeMainStarter(filepath.Join(dir, "services/user-service/cmd/main.go"), "Monorepo User Service"); err != nil {
+		return fmt.Errorf("failed to write main file: %w", err)
+	}
+	
+	// Write library files
+	if err := writeLibraryFiles(dir); err != nil {
+		return fmt.Errorf("failed to write library files: %w", err)
+	}
+	
+	// Write common files
+	if err := writeREADME(dir, "Monorepo", module); err != nil {
+		return fmt.Errorf("failed to write README: %w", err)
+	}
+	
+	if err := writeGitignore(dir); err != nil {
+		return fmt.Errorf("failed to write .gitignore: %w", err)
+	}
+	
+	return nil
 }
 
 func generateCQRS(module string) error {
