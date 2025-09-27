@@ -1,5 +1,8 @@
 name: Build and Release
-
+permissions:
+    contents: write
+    packages: write
+    pull-requests: write
 on:
     push:
         tags:
@@ -10,11 +13,6 @@ on:
             - "docs/**"
             - "scripts/**"
             - "*.md"
-
-permissions:
-    contents: write
-    packages: write
-
 jobs:
     test:
         runs-on: ubuntu-latest
