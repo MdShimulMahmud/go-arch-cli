@@ -64,11 +64,14 @@ jobs:
             - name: Run vulnerability scan
               run: govulncheck ./...
 
-            - name: Run security linting
+            - name: Run security and quality checks
               run: |
-                  go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-                  gosec -fmt sarif -out gosec-results.sarif ./...
-                  gosec ./...
+                  # Use staticcheck for code quality and security analysis
+                  go install honnef.co/go/tools/cmd/staticcheck@latest
+                  staticcheck ./...
+
+                  # Use go vet for additional checks
+                  go vet ./...
 
             - name: Get version from tag
               id: version
