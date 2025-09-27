@@ -1,4 +1,4 @@
-# Go Architecture CLI
+# Go Project Architecture CLI
 
 [![CI](https://github.com/MdShimulMahmud/go-arch-cli/workflows/CI/badge.svg)](https://github.com/MdShimulMahmud/go-arch-cli/actions)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/MdShimulMahmud/go-arch-cli)](https://golang.org/)
@@ -133,47 +133,295 @@ go-arch-cli --help
 go-arch-cli generate --help
 ```
 
-## Project Structure Examples
+## Architecture Patterns & Project Structures
 
-### Clean Architecture
+### 🏗️ Flat Structure
+**Best for**: Small projects, prototypes, simple applications
 ```
-project_clean/
-├── cmd/app/main.go
-├── internal/entities/user.go
-├── internal/usecases/user_service.go
-├── internal/repository/user_repo.go
-├── internal/delivery/http/user_handler.go
-├── README.md
-├── .gitignore
-└── go.mod
+project_flat/
+├── main.go           # Application entry point
+├── handler.go        # HTTP handlers
+├── service.go        # Business logic
+├── repository.go     # Data access layer
+├── config.go         # Configuration management
+├── utils.go          # Utility functions
+├── README.md         # Project documentation
+├── .gitignore        # Git ignore patterns
+└── go.mod            # Go module definition
 ```
 
-### DDD (Domain-Driven Design)
+### 🎯 Domain-Driven Design (DDD)
+**Best for**: Complex domains, team separation by business domains
 ```
 project_ddd/
-├── cmd/app/main.go
-├── internal/user/handler.go
-├── internal/user/service.go
-├── internal/user/repository.go
-├── internal/user/user.go
-├── internal/product/handler.go
-├── internal/product/service.go
-├── internal/product/repository.go
+├── cmd/
+│   └── app/
+│       └── main.go           # Application bootstrap
+├── internal/
+│   ├── user/                 # User domain
+│   │   ├── handler.go        # User HTTP handlers
+│   │   ├── service.go        # User business logic
+│   │   ├── repository.go     # User data access
+│   │   └── user.go           # User domain entity
+│   └── product/              # Product domain
+│       ├── handler.go        # Product HTTP handlers
+│       ├── service.go        # Product business logic
+│       └── repository.go     # Product data access
 ├── README.md
 ├── .gitignore
 └── go.mod
 ```
 
-### Hexagonal Architecture
+### 🧹 Clean Architecture
+**Best for**: Testable applications, dependency inversion, SOLID principles
+```
+project_clean/
+├── cmd/
+│   └── app/
+│       └── main.go                 # Application entry point
+├── internal/
+│   ├── entities/
+│   │   └── user.go                 # Core business entities
+│   ├── usecases/
+│   │   └── user_service.go         # Application business rules
+│   ├── repository/
+│   │   └── user_repo.go            # Data access interface implementation
+│   └── delivery/
+│       └── http/
+│           └── user_handler.go     # HTTP delivery mechanism
+├── README.md
+├── .gitignore
+└── go.mod
+```
+
+### 🌟 Feature-Based Structure
+**Best for**: Large applications, feature teams, microservices preparation
+```
+project_feature/
+├── cmd/
+│   └── app/
+│       └── main.go                     # Application bootstrap
+├── internal/
+│   ├── user/                           # User feature module
+│   │   ├── handler/
+│   │   │   └── user_handler.go         # User HTTP handlers
+│   │   ├── service/
+│   │   │   └── user_service.go         # User business logic
+│   │   ├── repository/
+│   │   │   └── user_repo.go            # User data access
+│   │   └── user.go                     # User domain model
+│   └── product/                        # Product feature module
+│       ├── handler/
+│       │   └── product_handler.go      # Product HTTP handlers
+│       ├── service/
+│       │   └── product_service.go      # Product business logic
+│       ├── repository/
+│       │   └── product_repo.go         # Product data access
+│       └── product.go                  # Product domain model
+├── pkg/
+│   └── logger.go                       # Shared utilities
+├── README.md
+├── .gitignore
+└── go.mod
+```
+
+### 🔆 Hexagonal Architecture (Ports & Adapters)
+**Best for**: Highly testable applications, external system isolation
 ```
 project_hexagonal/
-├── cmd/app/main.go
-├── internal/core/user/entity.go
-├── internal/core/user/usecase.go
-├── internal/adapters/database/user_repo.go
-├── internal/adapters/api/user_handler.go
-├── internal/ports/user_repository.go
-├── internal/ports/user_service.go
+├── cmd/
+│   └── app/
+│       └── main.go                     # Application bootstrap
+├── internal/
+│   ├── core/                           # Core business logic (hexagon center)
+│   │   └── user/
+│   │       ├── entity.go               # Core business entities
+│   │       └── usecase.go              # Core business use cases
+│   ├── adapters/                       # External adapters
+│   │   ├── database/
+│   │   │   └── user_repo.go            # Database adapter
+│   │   └── api/
+│   │       └── user_handler.go         # HTTP API adapter
+│   └── ports/                          # Ports (interfaces)
+│       ├── user_repository.go          # Repository port
+│       └── user_service.go             # Service port
+├── README.md
+├── .gitignore
+└── go.mod
+```
+
+### 🧩 Modular Monolith
+**Best for**: Large teams, independent module development, gradual microservices migration
+```
+project_modular/
+├── user_module/                        # Independent user module
+│   ├── handler/                        # User HTTP handlers
+│   ├── service/                        # User business logic
+│   ├── repository/                     # User data access
+│   ├── user.go                         # User domain model
+│   └── go.mod                          # Module-specific dependencies
+├── product_module/                     # Independent product module
+│   ├── handler/                        # Product HTTP handlers
+│   ├── service/                        # Product business logic
+│   ├── repository/                     # Product data access
+│   ├── product.go                      # Product domain model
+│   └── go.mod                          # Module-specific dependencies
+├── api_gateway/                        # API Gateway
+│   ├── main.go                         # Gateway entry point
+│   └── go.mod                          # Gateway dependencies
+├── configs/                            # Shared configurations
+├── README.md
+└── .gitignore
+```
+
+### 🏢 Monorepo Structure
+**Best for**: Multiple services, shared libraries, unified development
+```
+project_monorepo/
+├── services/
+│   └── user-service/                   # User microservice
+│       ├── cmd/
+│       │   └── main.go                 # Service entry point
+│       ├── internal/
+│       │   ├── handler/                # HTTP handlers
+│       │   ├── service/                # Business logic
+│       │   ├── repository/             # Data access
+│       │   └── models/                 # Domain models
+│       └── go.mod                      # Service dependencies
+├── libs/                               # Shared libraries
+│   ├── logging/                        # Shared logging library
+│   ├── authentication/                 # Shared auth library
+│   └── utils/                          # Common utilities
+├── go.mod                              # Root module
+├── README.md
+└── .gitignore
+```
+
+### ⚡ CQRS (Command Query Responsibility Segregation)
+**Best for**: High-performance applications, read/write separation, event sourcing
+```
+project_cqrs/
+├── cmd/
+│   └── app/
+│       └── main.go                     # Application entry point
+├── internal/
+│   ├── commands/                       # Write operations
+│   │   ├── create_user.go              # Create user command
+│   │   ├── update_user.go              # Update user command
+│   │   └── delete_user.go              # Delete user command
+│   ├── queries/                        # Read operations
+│   │   └── get_user.go                 # Get user query
+│   ├── repositories/
+│   │   └── user_repo.go                # Data persistence
+│   ├── models/
+│   │   └── user.go                     # Domain models
+│   └── services/
+│       └── user_service.go             # Business services
+├── README.md
+├── .gitignore
+└── go.mod
+```
+
+### 🧅 Onion Architecture
+**Best for**: Dependency inversion, testability, infrastructure independence
+```
+project_onion/
+├── cmd/
+│   └── your-app/
+│       └── main.go                             # Application entry point
+├── internal/
+│   ├── domain/                                 # Core domain (innermost layer)
+│   │   ├── entity.go                           # Domain entities
+│   │   └── service.go                          # Domain services
+│   ├── application/                            # Application layer
+│   │   └── usecase.go                          # Application use cases
+│   └── infrastructure/                         # Infrastructure layer (outermost)
+│       ├── persistence/
+│       │   └── repository.go                   # Data persistence
+│       └── api/
+│           └── handler.go                      # HTTP API
+├── README.md
+├── .gitignore
+└── go.mod
+```
+
+### 📋 Common/Standard Go Layout
+**Best for**: Large applications, open-source projects, following Go community standards
+```
+project_common/
+├── cmd/
+│   └── myapp/
+│       └── main.go                             # Application entry point
+├── internal/                                   # Private application code
+│   ├── app/
+│   │   └── myapp/
+│   │       ├── handler.go                      # HTTP handlers
+│   │       └── service.go                      # Business logic
+│   ├── pkg/
+│   │   └── myprivlib/                          # Private shared libraries
+│   ├── domain/
+│   │   ├── entity.go                           # Domain entities
+│   │   └── service.go                          # Domain services
+│   └── infrastructure/
+│       ├── persistence/
+│       │   └── repository.go                   # Data access
+│       ├── api/
+│       │   └── handler.go                      # API handlers
+│       └── messaging/
+│           └── producer.go                     # Message producers
+├── pkg/
+│   └── mypubliclib/                            # Public shared libraries
+├── api/
+│   └── api_spec.yaml                           # API specifications
+├── web/
+│   ├── static/                                 # Static web assets
+│   └── templates/                              # HTML templates
+├── configs/
+│   └── config.yaml                             # Configuration files
+├── init/
+│   └── myapp.service                           # System init files
+├── scripts/
+│   ├── build.sh                                # Build scripts
+│   └── install.sh                              # Installation scripts
+├── build/
+│   ├── package/                                # Packaging configs
+│   └── ci/                                     # CI configurations
+├── deployments/
+│   └── kubernetes/                             # Deployment configs
+├── test/
+│   └── data/                                   # Test data
+├── docs/
+│   └── architecture.md                         # Documentation
+├── tools/
+│   └── mytool/                                 # Supporting tools
+├── examples/
+│   └── example_usage.go                        # Usage examples
+├── third_party/                                # External tools/utilities
+├── githooks/                                   # Git hooks
+├── assets/                                     # Project assets
+├── website/
+│   └── index.html                              # Project website
+├── README.md
+├── .gitignore
+└── go.mod
+```
+
+### 🏛️ Layered Architecture
+**Best for**: Traditional MVC applications, familiar patterns, rapid development
+```
+project_layered/
+├── cmd/
+│   └── app/
+│       └── main.go                     # Application entry point
+├── internal/
+│   ├── presentation/                   # Presentation layer
+│   │   └── user_handler.go             # HTTP handlers/controllers
+│   ├── service/                        # Service/business layer
+│   │   └── user_service.go             # Business logic
+│   ├── repository/                     # Data access layer
+│   │   └── user_repo.go                # Data access objects
+│   └── domain/                         # Domain/model layer
+│       └── user.go                     # Domain entities/models
 ├── README.md
 ├── .gitignore
 └── go.mod

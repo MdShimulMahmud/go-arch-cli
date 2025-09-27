@@ -6,6 +6,10 @@ on:
             - "v*"
     pull_request:
         branches: [master]
+        paths-ignore:
+            - "docs/**"
+            - "scripts/**"
+            - "*.md"
 
 permissions:
     contents: write
