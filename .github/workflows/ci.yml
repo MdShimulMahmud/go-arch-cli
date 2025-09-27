@@ -1,0 +1,39 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    test:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest, macos-latest]
+                go-version: ["1.19", "1.20", "1.21"]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: ${{ matrix.go-version }}
+
+            - name: Download dependencies
+              run: go mod download
+
+            - name: Run tests
+              run: go test -v ./...
+
+            - name: Build
+              run: go build -v ./...
+
+            - name: Test CLI functionality
+              run: |
+                  go build -o go-arch-cli .
+                  ./go-arch-cli --version
+                  ./go-arch-cli generate --help
+              shell: bash
