@@ -38,6 +38,19 @@ A command-line tool to generate Go projects with different architectural pattern
 
 ### Quick Install (Recommended)
 
+### 🔒 Secure Installation (Recommended)
+
+#### Linux/macOS - With Signature Verification
+```bash
+# Download and run secure installation script with signature verification
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash
+
+# Or with custom directory
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "$HOME/bin"
+```
+
+#### Quick Install (Standard)
+
 #### Linux/macOS
 ```bash
 # Download and run installation script
@@ -71,6 +84,29 @@ go install github.com/MdShimulMahmud/go-arch-cli@latest
 ### Direct Download
 
 Download the latest binary from the [releases page](https://github.com/MdShimulMahmud/go-arch-cli/releases).
+
+## 🔒 Security
+
+All release binaries are secured with multiple verification mechanisms:
+
+- **🔐 Digital Signatures**: All binaries signed with Cosign (keyless OIDC)
+- **✅ Checksums**: SHA256 and SHA512 hashes provided
+- **🛡️ Vulnerability Scanning**: Dependencies scanned with govulncheck
+- **📋 SBOM**: Software Bill of Materials included
+- **🏗️ Hardened Builds**: Static compilation with security flags
+- **🔍 Reproducible Builds**: Deterministic build process
+
+### Quick Verification
+```bash
+# Download and verify (example for Linux)
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.0/go-arch-cli-linux-amd64
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.0/SHA256SUMS
+
+# Verify checksum
+sha256sum -c SHA256SUMS
+```
+
+For detailed security information, see [SECURITY.md](SECURITY.md).
 
 ## Usage
 
