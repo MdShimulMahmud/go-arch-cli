@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Go Architecture CLI Installation Script
+# Usage: ./install.sh [VERSION] [INSTALL_DIR]
+# Example: ./install.sh v1.0.3 $HOME/bin
 
 set -e
 
@@ -8,7 +10,8 @@ BINARY_NAME="go-arch-cli"
 REPO="MdShimulMahmud/go-arch-cli"
 # Allow passing a version tag as first argument (defaults to latest)
 VERSION_ARG="$1"
-INSTALL_DIR="/usr/local/bin"
+# Allow passing install directory as second argument (defaults to /usr/local/bin)
+INSTALL_DIR="${2:-/usr/local/bin}"
 
 # Colors for output
 RED='\033[0;31m'

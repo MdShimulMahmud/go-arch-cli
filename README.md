@@ -36,29 +36,11 @@ A command-line tool to generate Go projects with different architectural pattern
 
 ## Installation
 
-### 🔒 Secure Installation (Recommended)
+Choose your installation method based on your security requirements:
 
-The secure installation script automatically verifies cryptographic signatures and checksums before installing:
+### Option 1: Quick Installation (Standard)
 
-#### Linux/macOS - With Signature Verification
-```bash
-# Install latest version with automatic verification
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash
-
-# Install to a custom directory (defaults to $HOME/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "" "$HOME/bin"
-
-# Install a specific version
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "v1.0.3"
-```
-
-The secure installer will:
-- ✅ Install cosign if not present
-- ✅ Verify binary signatures using cosign
-- ✅ Verify SHA256 checksums
-- ✅ Ensure installation integrity
-
-### Quick Install (Standard)
+Fast installation without signature verification. Suitable for development environments and quick testing.
 
 #### Linux/macOS
 ```bash
@@ -66,17 +48,49 @@ The secure installer will:
 curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash
 
 # Install to custom directory
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "$HOME/bin"
-
-# Install specific version
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "v1.0.3"
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "v1.0.3" "$HOME/bin"
 ```
 
 #### Windows
 ```powershell
 # Download and run installation script
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.bat -OutFile install.bat && .\install.bat
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.bat -OutFile install.bat
+.\install.bat
 ```
+
+**What it does:**
+- Downloads the binary from GitHub releases
+- Installs to `/usr/local/bin` (Linux/macOS) or `C:\Program Files\go-arch-cli` (Windows)
+- No signature verification
+
+---
+
+### Option 2: 🔒 Secure Installation (Recommended for Production)
+
+Installation with full cryptographic verification. **Recommended for production environments, CI/CD pipelines, and security-conscious users.**
+
+#### Linux/macOS
+```bash
+# Install latest version with signature verification
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash
+
+# Install to custom directory (defaults to $HOME/.local/bin)
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "v1.0.3" "$HOME/bin"
+```
+
+**What it does:**
+- ✅ Installs cosign if not present
+- ✅ Verifies binary signatures using Cosign (keyless OIDC)
+- ✅ Verifies SHA256 checksums
+- ✅ Ensures supply chain integrity
+- ✅ Fails if any verification step fails
+
+**Security guarantees:**
+- Cryptographic proof that binaries were built by the official CI pipeline
+- Protection against tampered or malicious binaries
+- Checksum verification ensures file integrity during download
+
+---
 
 ### Other Installation Methods
 
@@ -95,7 +109,9 @@ make build
 
 #### Direct Download
 
-Download the latest binary from the [releases page](https://github.com/MdShimulMahmud/go-arch-cli/releases).
+Download pre-built binaries from the [releases page](https://github.com/MdShimulMahmud/go-arch-cli/releases).
+
+For manual verification instructions, see the [Security](#-security) section below.
 
 ## 🔒 Security
 
