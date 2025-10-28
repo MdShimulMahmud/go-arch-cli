@@ -91,18 +91,77 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: 1
         run: |
+          set -euo pipefail
           cd dist
+          # fail early if there are no artifacts to sign
+          if [ -z "$(ls -A | grep -v -E '\.sig$|\.pem$' || true)" ]; then
+            echo "No artifacts found to sign in dist/" >&2
+            exit 1
+          fi
           for f in *; do
             # skip signing generated signature/cert files
             if [[ "$f" == *.sig || "$f" == *.pem ]]; then
               continue
             fi
-            cosign sign-blob --yes "$f" --output-signature "${f}.sig" --output-certificate "${f}.pem" || true
+            echo "Signing $f"
+            cosign sign-blob --yes "$f" --output-signature "${f}.sig" --output-certificate "${f}.pem"
           done
+
+      - name: Ensure artifacts exist before upload
+        run: |
+          set -euo pipefail
+          if [ ! -d dist ]; then
+            echo "dist/ directory is missing" >&2
+            exit 1
+          fi
+          # ensure there is at least one non-signature artifact
+          count=$(ls -A dist | grep -v -E '\.sig$|\.pem$' | wc -l || true)
+          if [ "$count" -lt 1 ]; then
+            echo "No built artifacts found in dist/ to upload" >&2
+            ls -la dist || true
+            exit 1
+          fi
 
       - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
+          generate_release_notes: true
+          body: |
+            ## 🔒 Security Information
+
+            ### Binary Verification
+            All binaries are signed using Cosign with keyless signing (OIDC).
+
+            **Verify signatures:**
+            ```bash
+            # Download the binary and its signature and certificate
+            # Replace <TAG> with the release tag, for example: ${{ github.ref_name }}
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/go-arch-cli-linux-amd64
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/go-arch-cli-linux-amd64.sig
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/go-arch-cli-linux-amd64.pem
+
+            # Verify signature
+            cosign verify-blob --signature go-arch-cli-linux-amd64.sig --certificate go-arch-cli-linux-amd64.pem go-arch-cli-linux-amd64
+            ```
+
+            ### Verify checksums
+            ```bash
+            # Download checksums
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/SHA256SUMS
+
+            # Verify binary integrity
+            sha256sum -c SHA256SUMS
+            ```
+
+            ### Notes
+            - ✅ Vulnerability Scanning: Dependencies scanned with govulncheck
+            - ✅ Security Linting: Code analyzed with gosec
+            - ✅ Hardened Builds: Static compilation with security flags
+            - ✅ Reproducible Builds: Deterministic builds via fixed timestamps
+            - ✅ Digital Signatures: Binaries signed with Cosign (keyless OIDC)
+            - ✅ Checksums: SHA256 and SHA512 hashes provided
+            - ✅ SBOM: Software Bill of Materials included
+            - ✅ Supply Chain Security: SLSA compliance measures
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

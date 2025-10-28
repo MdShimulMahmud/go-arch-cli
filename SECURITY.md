@@ -63,7 +63,7 @@ This document outlines the comprehensive security measures implemented for `go-a
 2. **Download Binary and Signature**:
    ```bash
    # Example for Linux binary
-   VERSION="v1.0.1"  # Replace with actual version
+   VERSION="v1.0.3"  # Replace with actual version
    wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${VERSION}/go-arch-cli-linux-amd64
    wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${VERSION}/go-arch-cli-linux-amd64.sig
    wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${VERSION}/go-arch-cli-linux-amd64.pem
@@ -171,5 +171,5 @@ This project follows:
 
 ---
 
-**Last Updated**: September 2025  
-**Version**: 1.0.1
+**Last Updated**: October 2025  
+**Version**: 1.0.3
