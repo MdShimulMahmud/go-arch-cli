@@ -104,7 +104,9 @@ jobs:
               continue
             fi
             echo "Signing $f"
-            cosign sign-blob --yes "$f" --output-signature "${f}.sig" --output-certificate "${f}.pem"
+            # Use keyless OIDC signing in GitHub Actions. --keyless tells cosign to
+            # obtain an OIDC token from the runner and create a keyless signature.
+            cosign sign-blob --keyless --output-signature "${f}.sig" --output-certificate "${f}.pem" "$f"
           done
 
       - name: Ensure artifacts exist before upload
