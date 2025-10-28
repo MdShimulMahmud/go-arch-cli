@@ -86,25 +86,31 @@ jobs:
           # signing is available. We already have Go set up above.
           set -euo pipefail
           go install github.com/sigstore/cosign/v2/cmd/cosign@latest
-          # Ensure GOPATH/bin is on PATH for subsequent steps
-          export PATH="$PATH:$(go env GOPATH)/bin"
+          # Add GOPATH/bin to GITHUB_PATH so cosign is available in subsequent steps
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Sign artifacts (keyless, OIDC)
         env:
           COSIGN_EXPERIMENTAL: 1
         run: |
           set -euo pipefail
+          
+          # Ensure cosign is in PATH
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          
           cd dist
           # Debug: show cosign version and sign-blob help so we can see supported flags
           echo "--- cosign version ---"
-          cosign version || true
+          cosign version
           echo "--- cosign sign-blob --help ---"
-          cosign sign-blob --help || true
+          cosign sign-blob --help | head -20
+          
           # fail early if there are no artifacts to sign
           if [ -z "$(ls -A | grep -v -E '\.sig$|\.pem$' || true)" ]; then
             echo "No artifacts found to sign in dist/" >&2
             exit 1
           fi
+          
           for f in *; do
             # skip signing generated signature/cert files
             if [[ "$f" == *.sig || "$f" == *.pem ]]; then
