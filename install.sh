@@ -6,6 +6,8 @@ set -e
 
 BINARY_NAME="go-arch-cli"
 REPO="MdShimulMahmud/go-arch-cli"
+# Allow passing a version tag as first argument (defaults to latest)
+VERSION_ARG="$1"
 INSTALL_DIR="/usr/local/bin"
 
 # Colors for output
@@ -82,8 +84,12 @@ install_binary() {
     # Create install directory if it doesn't exist
     mkdir -p "$INSTALL_DIR"
     
-    # Download latest release
-    DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}-${PLATFORM}"
+    # Download release (use provided version if given)
+    if [[ -n "${VERSION_ARG}" ]]; then
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION_ARG}/${BINARY_NAME}-${PLATFORM}"
+    else
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}-${PLATFORM}"
+    fi
     
     print_info "Downloading from: $DOWNLOAD_URL"
     

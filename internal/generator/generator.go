@@ -175,9 +175,18 @@ func contains(slice []string, item string) bool {
 func writeFiles(dir string, files []string) error {
 	for _, f := range files {
 		path := filepath.Join(dir, f)
+		// If the entry ends with a slash, treat it as a directory and create it.
+		if strings.HasSuffix(f, "/") {
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return err
+			}
+			continue
+		}
+
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			return err
 		}
+
 		if _, err := os.Create(path); err != nil {
 			return err
 		}
@@ -468,6 +477,79 @@ func generateModular(module string) error {
 	}
 	os.MkdirAll(dir, 0755)
 	writeFiles(dir, files)
+	// Write basic module files for the modular architecture
+	// user module
+	userHandler := `package handler
+
+import "net/http"
+
+func UserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("user handler"))
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "user_module/handler/user_handler.go"), []byte(userHandler), 0644)
+
+	userService := `package service
+
+func UserService() string {
+	return "user service"
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "user_module/service/user_service.go"), []byte(userService), 0644)
+
+	userRepo := `package repository
+
+func UserRepo() string {
+	return "user repo"
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "user_module/repository/user_repository.go"), []byte(userRepo), 0644)
+
+	// product module
+	productHandler := `package handler
+
+import "net/http"
+
+func ProductHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("product handler"))
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "product_module/handler/product_handler.go"), []byte(productHandler), 0644)
+
+	productService := `package service
+
+func ProductService() string {
+	return "product service"
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "product_module/service/product_service.go"), []byte(productService), 0644)
+
+	productRepo := `package repository
+
+func ProductRepo() string {
+	return "product repo"
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "product_module/repository/product_repository.go"), []byte(productRepo), 0644)
+
+	// write basic model files for modules
+	userModel := `package user
+
+type User struct {
+	ID   int
+	Name string
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "user_module/user.go"), []byte(userModel), 0644)
+
+	productModel := `package product
+
+type Product struct {
+	ID   int
+	Name string
+}
+`
+	_ = os.WriteFile(filepath.Join(dir, "product_module/product.go"), []byte(productModel), 0644)
 	writeMainStarter(filepath.Join(dir, "api_gateway/main.go"), "Modular")
 	writeREADME(dir, "Modular", module)
 	writeGitignore(dir)

@@ -9,7 +9,7 @@ A command-line tool to generate Go projects with different architectural pattern
 ## Features
 
 - **11 Architecture Patterns**: Support for popular Go project architectures
-- **Interactive Mode**: User-friendly dropdown selection with project preview
+- **Interactive Mode**: User-friendly selection (prefers external `fzf` when available) with project preview. Falls back to a simple numeric menu when `fzf` isn't present. Use `--no-fuzzy` to disable fuzzy selection in CI or scripted runs.
 - **Non-Interactive Mode**: Command-line flags for automation and scripting
 - **Enhanced Tree Preview**: Professional directory structure visualization
 - **Input Validation**: Comprehensive validation for module names and architectures
@@ -475,7 +475,7 @@ Each generated project includes:
 
 ## Requirements
 
-- Go 1.23 or higher
+- Go 1.24 or higher
 - Terminal with interactive support (for interactive mode)
 
 ## Development
@@ -517,7 +517,7 @@ make test
 ## Dependencies
 
 - [Cobra](https://github.com/spf13/cobra) - CLI framework
-- [Survey](https://github.com/AlecAivazis/survey) - Interactive prompts
+- Interactive selection: prefers external `fzf` binary (if available). The CLI falls back to a numeric selection menu when `fzf` is not installed. Use `--no-fuzzy` to force non-fuzzy behaviour (useful in CI).
 
 ## Contributing
 

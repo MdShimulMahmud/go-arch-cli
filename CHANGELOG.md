@@ -51,5 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Built with Go 1.19+
 - Uses Cobra CLI framework
 - Uses Survey for interactive prompts
+- Uses fuzzy finder (fzf-like via `go-fuzzyfinder`) for selection and stdin prompts for text/confirm
 - Supports Go modules
 - Cross-platform binary releases

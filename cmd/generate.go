@@ -1,19 +1,24 @@
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/MdShimulMahmud/go-arch-cli/internal/generator"
-
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 var archFlag string
 var moduleFlag string
+var noFuzzy bool
 
 // Supported architectures
 var supportedArchitectures = []string{
@@ -97,24 +102,26 @@ Examples:
 			}
 		} else {
 			// Interactive mode
-			promptArch := &survey.Select{
-				Message: "Select architecture:",
-				Options: supportedArchitectures,
-				Help:    "Choose the architecture pattern for your Go project",
-			}
-			if err := survey.AskOne(promptArch, &arch); err != nil {
-				fmt.Printf("Error: %v\n", err)
+			// Select architecture using robust fallback:
+			// 1) go-fuzzyfinder when running in a TTY
+			// 2) external fzf if present
+			// 3) numeric menu fallback
+			sel, err := selectArchitecture(supportedArchitectures)
+			if err != nil {
+				fmt.Printf("Error selecting architecture: %v\n", err)
 				return
 			}
+			arch = sel
 
-			promptModule := &survey.Input{
-				Message: "Go module name:",
-				Default: "github.com/user/project",
-				Help:    "Enter a valid Go module name (e.g., github.com/username/project)",
-			}
-			if err := survey.AskOne(promptModule, &module); err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return
+			// Prompt for module name using stdin
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Printf("Go module name [%s]: ", "github.com/user/project")
+			input, _ := reader.ReadString('\n')
+			input = strings.TrimSpace(input)
+			if input == "" {
+				module = "github.com/user/project"
+			} else {
+				module = input
 			}
 
 			// Validate module name
@@ -128,10 +135,16 @@ Examples:
 		if err := checkExistingProject(arch); err != nil {
 			fmt.Printf("Warning: %v\n", err)
 			var overwrite bool
-			survey.AskOne(&survey.Confirm{
-				Message: "Do you want to overwrite the existing directory?",
-				Default: false,
-			}, &overwrite)
+			// simple confirm prompt
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Printf("Do you want to overwrite the existing directory? [y/N]: ")
+			resp, _ := reader.ReadString('\n')
+			resp = strings.TrimSpace(resp)
+			if resp == "" {
+				overwrite = false
+			} else {
+				overwrite = strings.HasPrefix(strings.ToLower(resp), "y")
+			}
 
 			if !overwrite {
 				fmt.Println("Generation cancelled.")
@@ -146,15 +159,17 @@ Examples:
 
 		// Confirm generation (skip if using flags)
 		if archFlag == "" || moduleFlag == "" {
+			// confirm generation via stdin
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Printf("Generate project? [Y/n]: ")
+			resp, _ := reader.ReadString('\n')
+			resp = strings.TrimSpace(resp)
 			var confirm bool
-			if err := survey.AskOne(&survey.Confirm{
-				Message: "Generate project?",
-				Default: true,
-			}, &confirm); err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return
+			if resp == "" {
+				confirm = true
+			} else {
+				confirm = strings.HasPrefix(strings.ToLower(resp), "y")
 			}
-
 			if !confirm {
 				fmt.Println("Generation cancelled.")
 				return
@@ -183,4 +198,77 @@ func init() {
 	rootCmd.AddCommand(generateCmd)
 	generateCmd.Flags().StringVarP(&archFlag, "arch", "a", "", "Architecture type")
 	generateCmd.Flags().StringVarP(&moduleFlag, "module", "m", "", "Go module name")
+	generateCmd.Flags().BoolVar(&noFuzzy, "no-fuzzy", false, "Disable fuzzy UI and use numeric selection")
+}
+
+// selectArchitecture chooses an architecture from the provided list using a
+// production-ready strategy: external fzf (if present and allowed) -> numeric menu.
+func selectArchitecture(options []string) (string, error) {
+	// If the user disabled fuzzy, skip trying external fzf
+	if !noFuzzy {
+		// Only try fzf in interactive terminals
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			if path, err := exec.LookPath("fzf"); err == nil && path != "" {
+				out, err := runExternalFzf(options)
+				if err == nil {
+					sel := strings.TrimSpace(out)
+					for _, o := range options {
+						if o == sel {
+							return o, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Numeric fallback: print numbered list and ask user
+	fmt.Println()
+	for i, o := range options {
+		fmt.Printf("%2d) %s\n", i+1, o)
+	}
+	fmt.Print("Select architecture by number: ")
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			return "", err
+		}
+		line = strings.TrimSpace(line)
+		if line == "" {
+			fmt.Print("Please enter a number: ")
+			continue
+		}
+		n, err := strconv.Atoi(line)
+		if err != nil || n < 1 || n > len(options) {
+			fmt.Printf("Invalid selection. Enter 1-%d: ", len(options))
+			continue
+		}
+		return options[n-1], nil
+	}
+}
+
+func runExternalFzf(options []string) (string, error) {
+	cmd := exec.Command("fzf", "--ansi")
+	// pipe options into fzf stdin
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return "", err
+	}
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Start(); err != nil {
+		stdin.Close()
+		return "", err
+	}
+	for _, o := range options {
+		io.WriteString(stdin, o+"\n")
+	}
+	stdin.Close()
+	if err := cmd.Wait(); err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }

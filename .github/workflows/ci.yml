@@ -1,49 +1,49 @@
 name: CI
 permissions:
-    contents: read
-    pull-requests: write
+  contents: read
+  pull-requests: write
 on:
-    push:
-        branches: [master]
-        paths-ignore:
-            - "docs/**"
-            - "scripts/**"
-            - "*.md"
-    pull_request:
-        branches: [master]
-        paths-ignore:
-            - "docs/**"
-            - "scripts/**"
-            - "*.md"
+  push:
+    branches: [master]
+    paths-ignore:
+      - "docs/**"
+      - "scripts/**"
+      - "*.md"
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - "docs/**"
+      - "scripts/**"
+      - "*.md"
 
 jobs:
-    test:
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [ubuntu-latest, windows-latest, macos-latest]
-                go-version: ["1.21", "1.22", "1.23", "1.24", "1.25"]
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go-version: ["1.21", "1.22", "1.23", "1.24", "1.25"]
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: ${{ matrix.go-version }}
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
 
-            - name: Download dependencies
-              run: go mod download
+      - name: Download dependencies
+        run: go mod download
 
-            - name: Run tests
-              run: go test -v ./...
+      - name: Run tests
+        run: go test -v ./...
 
-            - name: Build
-              run: go build -v ./...
+      - name: Build
+        run: go build -v ./...
 
-            - name: Test CLI functionality
-              run: |
-                  go build -o go-arch-cli .
-                  ./go-arch-cli --version
-                  ./go-arch-cli generate --help
-              shell: bash
+      - name: Test CLI functionality
+        run: |
+          go build -o go-arch-cli .
+          ./go-arch-cli --version
+          ./go-arch-cli generate --help
+        shell: bash

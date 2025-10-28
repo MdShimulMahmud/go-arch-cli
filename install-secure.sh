@@ -6,7 +6,9 @@ set -e
 
 REPO="MdShimulMahmud/go-arch-cli"
 BINARY_NAME="go-arch-cli"
-INSTALL_DIR="${1:-$HOME/.local/bin}"
+# Optional parameter: version tag to install (defaults to latest)
+VERSION_TAG="$1"
+INSTALL_DIR="${2:-$HOME/.local/bin}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -185,9 +187,12 @@ main() {
     local platform=$(detect_platform)
     log_info "Detected platform: $platform"
     
-    # Get latest version
-    local version=$(get_latest_version)
-    log_info "Latest version: $version"
+    # Determine version to download
+    local version="${VERSION_TAG:-}"
+    if [[ -z "$version" ]]; then
+        version=$(get_latest_version)
+    fi
+    log_info "Using version: $version"
     
     # Set up file names
     local binary_name="${BINARY_NAME}-${platform}"

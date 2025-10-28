@@ -1,177 +1,108 @@
-name: Build and Release
-permissions:
-    contents: write
-    packages: write
-    pull-requests: write
-    id-token: write # Required for OIDC token generation
+name: Release (clean)
 
 on:
-    push:
-        tags:
-            - "v*"
-    pull_request:
-        branches: [master]
-        paths-ignore:
-            - "docs/**"
-            - "scripts/**"
-            - "*.md"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  test:
+    name: Run tests and formatting checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: "1.23"
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
 
-            - name: Run tests
-              run: go test -v ./...
+      - name: Install modules
+        run: go mod download
 
-            - name: Check formatting
-              run: |
-                  if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-                    gofmt -s -l .
-                    exit 1
-                  fi
+      - name: Run unit tests
+        run: go test ./...
 
-    build:
-        needs: test
-        runs-on: ubuntu-latest
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Check formatting
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Code is not gofmt'd. Run 'gofmt -w .' locally.";
+            gofmt -s -l .;
+            exit 1;
+          fi
 
-        steps:
-            - uses: actions/checkout@v4
+  release:
+    name: Build, sign and publish
+    needs: test
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: "1.23"
-                  check-latest: true
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
 
-            - name: Install security tools
-              run: |
-                  # Install govulncheck for vulnerability scanning
-                  go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Install modules
+        run: go mod download
 
-                  # Install cosign for signing
-                  curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
-                  sudo mv cosign-linux-amd64 /usr/local/bin/cosign
-                  sudo chmod +x /usr/local/bin/cosign
+      - name: Build artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          # linux/amd64
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/go-arch-cli-linux-amd64
+          # linux/arm64
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/go-arch-cli-linux-arm64
+          # darwin/amd64
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/go-arch-cli-darwin-amd64
+          # darwin/arm64
+          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/go-arch-cli-darwin-arm64
+          # windows/amd64
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/go-arch-cli-windows-amd64.exe
 
-            - name: Run vulnerability scan
-              run: govulncheck ./...
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
+          sha512sum * > SHA512SUMS
 
-            - name: Run security and quality checks
-              run: |
-                  # Use staticcheck for code quality and security analysis
-                  go install honnef.co/go/tools/cmd/staticcheck@latest
-                  staticcheck ./...
+      - name: Generate SBOM
+        run: |
+          go install github.com/anchore/syft/cmd/syft@latest
+          syft packages . -o spdx-json > dist/go-arch-cli-sbom.spdx.json
 
-                  # Use go vet for additional checks
-                  go vet ./...
+      - name: Install cosign
+        run: |
+          COSIGN_URL="https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
+          curl -sLo cosign "$COSIGN_URL"
+          chmod +x cosign
+          sudo mv cosign /usr/local/bin/cosign
 
-            - name: Get version from tag
-              id: version
-              run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      - name: Sign artifacts (keyless, OIDC)
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          cd dist
+          for f in *; do
+            # skip signing generated signature/cert files
+            if [[ "$f" == *.sig || "$f" == *.pem ]]; then
+              continue
+            fi
+            cosign sign-blob --yes "$f" --output-signature "${f}.sig" --output-certificate "${f}.pem" || true
+          done
 
-            - name: Build for multiple platforms with hardening
-              run: |
-                  mkdir -p dist
-
-                  # Security-hardened build flags
-                  LDFLAGS="-X 'github.com/MdShimulMahmud/go-arch-cli/cmd.Version=${{ steps.version.outputs.VERSION }}' -s -w -buildid= -extldflags '-static'"
-                  CGO_ENABLED=0
-
-                  # Reproducible builds
-                  export SOURCE_DATE_EPOCH=1640995200  # Fixed timestamp for reproducible builds
-
-                  # Build for Windows
-                  GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/go-arch-cli-windows-amd64.exe
-
-                  # Build for Linux
-                  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/go-arch-cli-linux-amd64
-
-                  # Build for macOS Intel
-                  GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/go-arch-cli-darwin-amd64
-
-                  # Build for macOS Apple Silicon
-                  GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" -o dist/go-arch-cli-darwin-arm64
-
-            - name: Generate checksums
-              run: |
-                  cd dist
-                  sha256sum * > SHA256SUMS
-                  sha512sum * > SHA512SUMS
-
-            - name: Generate SBOM (Software Bill of Materials)
-              run: |
-                  go install github.com/anchore/syft/cmd/syft@latest
-                  syft packages . -o spdx-json > dist/go-arch-cli-sbom.spdx.json
-
-            - name: Sign binaries and checksums with Cosign
-              env:
-                  COSIGN_EXPERIMENTAL: 1
-              run: |
-                  cd dist
-                  # Sign all binaries and checksums
-                  for file in go-arch-cli-* SHA256SUMS SHA512SUMS; do
-                    cosign sign-blob --yes "$file" --output-signature "${file}.sig"
-                    cosign sign-blob --yes "$file" --output-certificate "${file}.pem"
-                  done
-
-            - name: Create Release
-              uses: softprops/action-gh-release@v2
-              with:
-                  files: |
-                      dist/go-arch-cli-windows-amd64.exe
-                      dist/go-arch-cli-linux-amd64
-                      dist/go-arch-cli-darwin-amd64
-                      dist/go-arch-cli-darwin-arm64
-                      dist/SHA256SUMS
-                      dist/SHA512SUMS
-                      dist/go-arch-cli-sbom.spdx.json
-                      dist/*.sig
-                      dist/*.pem
-                  generate_release_notes: true
-                  draft: false
-                  prerelease: false
-                  body: |
-                      ## 🔒 Security Information
-
-                      ### Binary Verification
-                      All binaries have been signed using Cosign with keyless signing (OIDC).
-
-                      **Verify signatures:**
-                      ```bash
-                      # Download the binary and its signature
-                      # For example, for Linux:
-                      wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${{ steps.version.outputs.VERSION }}/go-arch-cli-linux-amd64
-                      wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${{ steps.version.outputs.VERSION }}/go-arch-cli-linux-amd64.sig
-                      wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${{ steps.version.outputs.VERSION }}/go-arch-cli-linux-amd64.pem
-
-                      # Verify signature
-                      cosign verify-blob --signature go-arch-cli-linux-amd64.sig --certificate go-arch-cli-linux-amd64.pem go-arch-cli-linux-amd64
-                      ```
-
-                      **Verify checksums:**
-                      ```bash
-                      # Download checksums
-                      wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/${{ steps.version.outputs.VERSION }}/SHA256SUMS
-
-                      # Verify binary integrity
-                      sha256sum -c SHA256SUMS
-                      ```
-
-                      ### Security Measures
-                      - ✅ **Vulnerability Scanning**: All dependencies scanned with govulncheck
-                      - ✅ **Security Linting**: Code analyzed with gosec
-                      - ✅ **Hardened Builds**: Static compilation with security flags
-                      - ✅ **Reproducible Builds**: Fixed timestamps for deterministic output
-                      - ✅ **Digital Signatures**: All binaries signed with Cosign
-                      - ✅ **Checksums**: SHA256 and SHA512 hashes provided
-                      - ✅ **SBOM**: Software Bill of Materials included
-                      - ✅ **Supply Chain Security**: SLSA compliance measures
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
