@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME=go-arch-cli
-VERSION=1.0.0
+VERSION=1.0.4
 BUILD_DIR=build
 DIST_DIR=dist
 
