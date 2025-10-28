@@ -36,28 +36,40 @@ A command-line tool to generate Go projects with different architectural pattern
 
 ## Installation
 
-### Quick Install (Recommended)
-
 ### 🔒 Secure Installation (Recommended)
+
+The secure installation script automatically verifies cryptographic signatures and checksums before installing:
 
 #### Linux/macOS - With Signature Verification
 ```bash
-# Download and run secure installation script with signature verification
+# Install latest version with automatic verification
 curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash
 
-# Or with custom directory
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "$HOME/bin"
+# Install to a custom directory (defaults to $HOME/.local/bin)
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "" "$HOME/bin"
+
+# Install a specific version
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "v1.0.3"
 ```
 
-#### Quick Install (Standard)
+The secure installer will:
+- ✅ Install cosign if not present
+- ✅ Verify binary signatures using cosign
+- ✅ Verify SHA256 checksums
+- ✅ Ensure installation integrity
+
+### Quick Install (Standard)
 
 #### Linux/macOS
 ```bash
-# Download and run installation script
+# Install latest version
 curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash
 
-# Or with custom directory
+# Install to custom directory
 curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "$HOME/bin"
+
+# Install specific version
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "v1.0.3"
 ```
 
 #### Windows
@@ -66,8 +78,14 @@ curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/i
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.bat -OutFile install.bat && .\install.bat
 ```
 
-### From Source
+### Other Installation Methods
 
+#### Using Go Install
+```bash
+go install github.com/MdShimulMahmud/go-arch-cli@latest
+```
+
+#### From Source
 ```bash
 git clone https://github.com/MdShimulMahmud/go-arch-cli.git
 cd go-arch-cli
@@ -75,13 +93,7 @@ make build
 # Binary will be in ./build/go-arch-cli
 ```
 
-### Using Go Install
-
-```bash
-go install github.com/MdShimulMahmud/go-arch-cli@latest
-```
-
-### Direct Download
+#### Direct Download
 
 Download the latest binary from the [releases page](https://github.com/MdShimulMahmud/go-arch-cli/releases).
 
@@ -96,14 +108,26 @@ All release binaries are secured with multiple verification mechanisms:
 - **🏗️ Hardened Builds**: Static compilation with security flags
 - **🔍 Reproducible Builds**: Deterministic build process
 
-### Quick Verification
+### Manual Verification Example
+
+If you download binaries manually, you can verify them:
+
 ```bash
-# Download and verify (example for Linux)
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.1/go-arch-cli-linux-amd64
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.1/SHA256SUMS
+# Example: Verify Linux AMD64 binary for v1.0.3
+# Download binary and verification files
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.3/go-arch-cli-linux-amd64
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.3/go-arch-cli-linux-amd64.sig
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.3/go-arch-cli-linux-amd64.pem
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.3/SHA256SUMS
+
+# Verify signature (requires cosign)
+cosign verify-blob \
+  --signature go-arch-cli-linux-amd64.sig \
+  --certificate go-arch-cli-linux-amd64.pem \
+  go-arch-cli-linux-amd64
 
 # Verify checksum
-sha256sum -c SHA256SUMS
+sha256sum -c SHA256SUMS --ignore-missing
 ```
 
 For detailed security information, see [SECURITY.md](SECURITY.md).
