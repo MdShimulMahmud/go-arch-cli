@@ -82,10 +82,12 @@ jobs:
 
       - name: Install cosign
         run: |
-          COSIGN_URL="https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
-          curl -sLo cosign "$COSIGN_URL"
-          chmod +x cosign
-          sudo mv cosign /usr/local/bin/cosign
+          # Install a modern cosign binary via `go install` (v2 module) so keyless
+          # signing is available. We already have Go set up above.
+          set -euo pipefail
+          go install github.com/sigstore/cosign/v2/cmd/cosign@latest
+          # Ensure GOPATH/bin is on PATH for subsequent steps
+          export PATH="$PATH:$(go env GOPATH)/bin"
 
       - name: Sign artifacts (keyless, OIDC)
         env:
@@ -93,6 +95,11 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
+          # Debug: show cosign version and sign-blob help so we can see supported flags
+          echo "--- cosign version ---"
+          cosign version || true
+          echo "--- cosign sign-blob --help ---"
+          cosign sign-blob --help || true
           # fail early if there are no artifacts to sign
           if [ -z "$(ls -A | grep -v -E '\.sig$|\.pem$' || true)" ]; then
             echo "No artifacts found to sign in dist/" >&2
