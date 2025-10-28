@@ -130,8 +130,21 @@ verify_signature() {
     
     log_info "Verifying signature for $(basename "$file")..."
     
-    if ! cosign verify-blob --signature "$signature" --certificate "$certificate" "$file" >/dev/null 2>&1; then
+    # For keyless signing verification, we need to specify the certificate identity
+    # GitHub Actions uses: https://github.com/<owner>/<repo>/.github/workflows/<workflow>@refs/tags/<tag>
+    # We'll use certificate-identity-regexp to match the workflow
+    
+    if ! cosign verify-blob \
+        --signature "$signature" \
+        --certificate "$certificate" \
+        --certificate-identity-regexp "https://github.com/${REPO}/" \
+        --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+        "$file" 2>&1; then
         log_error "Signature verification failed for $(basename "$file")"
+        log_info "This might be due to:"
+        log_info "  - Cosign version incompatibility (try: cosign version)"
+        log_info "  - Certificate chain issues"
+        log_info "  - Signature was created with a different signing method"
         return 1
     fi
     
