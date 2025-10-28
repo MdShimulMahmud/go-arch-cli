@@ -94,23 +94,23 @@ jobs:
           COSIGN_EXPERIMENTAL: 1
         run: |
           set -euo pipefail
-          
+
           # Ensure cosign is in PATH
           export PATH="$PATH:$(go env GOPATH)/bin"
-          
+
           cd dist
           # Debug: show cosign version and sign-blob help so we can see supported flags
           echo "--- cosign version ---"
           cosign version
           echo "--- cosign sign-blob --help ---"
           cosign sign-blob --help | head -20
-          
+
           # fail early if there are no artifacts to sign
           if [ -z "$(ls -A | grep -v -E '\.sig$|\.pem$' || true)" ]; then
             echo "No artifacts found to sign in dist/" >&2
             exit 1
           fi
-          
+
           for f in *; do
             # skip signing generated signature/cert files
             if [[ "$f" == *.sig || "$f" == *.pem ]]; then
