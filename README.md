@@ -92,11 +92,16 @@ curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/i
 
 ---
 
-### Other Installation Methods
+###Other Installation Methods
 
 #### Using Go Install
 ```bash
 go install github.com/MdShimulMahmud/go-arch-cli@latest
+```
+
+**Note:** The Go module proxy may cache older versions. To ensure you get the latest version, use:
+```bash
+GOPROXY=direct go install github.com/MdShimulMahmud/go-arch-cli@v1.0.4
 ```
 
 #### From Source
