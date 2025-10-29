@@ -48,7 +48,7 @@ Fast installation without signature verification. Suitable for development envir
 curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash
 
 # Install to custom directory
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "v1.0.4" "$HOME/bin"
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install.sh | bash -s -- "v1.0.5" "$HOME/bin"
 ```
 
 #### Windows
@@ -75,7 +75,7 @@ Installation with full cryptographic verification. **Recommended for production 
 curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash
 
 # Install to custom directory (defaults to $HOME/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "v1.0.4" "$HOME/bin"
+curl -fsSL https://raw.githubusercontent.com/MdShimulMahmud/go-arch-cli/master/install-secure.sh | bash -s -- "v1.0.5" "$HOME/bin"
 ```
 
 **What it does:**
@@ -101,7 +101,7 @@ go install github.com/MdShimulMahmud/go-arch-cli@latest
 
 **Note:** The Go module proxy may cache older versions. To ensure you get the latest version, use:
 ```bash
-GOPROXY=direct go install github.com/MdShimulMahmud/go-arch-cli@v1.0.4
+GOPROXY=direct go install github.com/MdShimulMahmud/go-arch-cli@v1.0.5
 ```
 
 #### From Source
@@ -134,12 +134,12 @@ All release binaries are secured with multiple verification mechanisms:
 If you download binaries manually, you can verify them:
 
 ```bash
-# Example: Verify Linux AMD64 binary for v1.0.4
+# Example: Verify Linux AMD64 binary for v1.0.5
 # Download binary and verification files
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.4/go-arch-cli-linux-amd64
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.4/go-arch-cli-linux-amd64.sig
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.4/go-arch-cli-linux-amd64.pem
-wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.4/SHA256SUMS
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.5/go-arch-cli-linux-amd64
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.5/go-arch-cli-linux-amd64.sig
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.5/go-arch-cli-linux-amd64.pem
+wget https://github.com/MdShimulMahmud/go-arch-cli/releases/download/v1.0.5/SHA256SUMS
 
 # Verify signature (requires cosign)
 cosign verify-blob \

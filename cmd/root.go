@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Version = "1.0.4"
+var Version = "1.0.5"
 
 var rootCmd = &cobra.Command{
 	Use:     "go-arch-cli",

@@ -3,7 +3,7 @@
 # Script to check if release assets exist and are properly signed
 
 REPO="MdShimulMahmud/go-arch-cli"
-VERSION="${1:-v1.0.4}"
+VERSION="${1:-v1.0.5}"
 
 echo "Checking release assets for $VERSION..."
 echo ""
