@@ -2,7 +2,7 @@
 
 # Go Architecture CLI Installation Script
 # Usage: ./install.sh [VERSION] [INSTALL_DIR]
-# Example: ./install.sh v1.0.3 $HOME/bin
+# Example: ./install.sh v1.0.4 $HOME/bin
 
 set -e
 
