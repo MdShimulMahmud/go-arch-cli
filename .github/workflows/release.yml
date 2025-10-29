@@ -141,8 +141,11 @@ jobs:
       - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
+          draft: false
+          prerelease: false
           files: dist/*
           generate_release_notes: true
+          fail_on_unmatched_files: true
           body: |
             ## 🔒 Security Information
 
